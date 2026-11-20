@@ -7,6 +7,7 @@ import shopping.member.domain.Member;
 import shopping.member.domain.MemberRepository;
 import shopping.member.dto.MemberRequest;
 import shopping.member.dto.TokenResponse;
+import shopping.member.exception.DuplicateEmailException;
 
 /**
  * 회원 관련 비즈니스 로직을 처리하는 서비스.
@@ -24,14 +25,22 @@ public class MemberService {
     }
 
     /**
-     * 회원 가입: 요청받은 이메일과 비밀번호로 회원을 만들어 저장하고,
+     * 회원 가입: 이메일 중복을 확인한 뒤, 요청받은 이메일과 비밀번호로 회원을 만들어 저장하고,
      * 저장된 회원의 ID로 인증 토큰을 발급한다.
      * @return 발급한 인증 토큰
      */
     @Transactional
     public TokenResponse register(MemberRequest request) {
+        validateDuplicateEmail(request.email());
         Member member = new Member(request.email(), request.password());
         Member savedMember = memberRepository.save(member);
         return new TokenResponse(jwtTokenProvider.createToken(savedMember.getId()));
+    }
+
+    // 이미 같은 이메일로 가입한 회원이 있으면 예외를 던진다.
+    private void validateDuplicateEmail(String email) {
+        if (memberRepository.existsByEmail(email)) {
+            throw new DuplicateEmailException();
+        }
     }
 }

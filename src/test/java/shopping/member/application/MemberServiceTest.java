@@ -1,6 +1,7 @@
 package shopping.member.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -11,6 +12,7 @@ import shopping.member.domain.Member;
 import shopping.member.domain.MemberRepository;
 import shopping.member.dto.MemberRequest;
 import shopping.member.dto.TokenResponse;
+import shopping.member.exception.DuplicateEmailException;
 
 @SpringBootTest
 @Transactional
@@ -40,5 +42,16 @@ class MemberServiceTest {
         TokenResponse response = memberService.register(REQUEST);
 
         assertThat(response.token()).isNotBlank();
+    }
+
+    @Test
+    @DisplayName("이미 가입된 이메일로 회원 가입하면 예외가 발생한다")
+    void registerWithDuplicateEmail() {
+        memberService.register(REQUEST);
+        MemberRequest sameEmail = new MemberRequest("user@test.com", "other-password");
+
+        assertThatThrownBy(() -> memberService.register(sameEmail))
+                .isInstanceOf(DuplicateEmailException.class)
+                .hasMessage("이미 가입된 이메일입니다.");
     }
 }
