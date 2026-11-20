@@ -12,6 +12,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.test.web.servlet.assertj.MvcTestResult;
 import org.springframework.transaction.annotation.Transactional;
+import shopping.product.domain.Product;
 import shopping.product.domain.ProductRepository;
 
 @SpringBootTest
@@ -44,5 +45,22 @@ class ProductControllerTest {
         assertThat(result).bodyJson().extractingPath("$.imageUrl")
                 .isEqualTo("https://example.com/popcorn.jpg");
         assertThat(productRepository.count()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("GET /api/products/{productId}로 특정 상품을 조회한다")
+    void findById() {
+        Product product = productRepository.save(
+                new Product("캐러멜 팝콘", 5_000L, "https://example.com/popcorn.jpg"));
+
+        MvcTestResult result = mockMvc.get().uri("/api/products/{productId}", product.getId())
+                .exchange();
+
+        assertThat(result).hasStatusOk();
+        assertThat(result).bodyJson().extractingPath("$.id").isEqualTo(product.getId().intValue());
+        assertThat(result).bodyJson().extractingPath("$.name").isEqualTo("캐러멜 팝콘");
+        assertThat(result).bodyJson().extractingPath("$.price").isEqualTo(5_000);
+        assertThat(result).bodyJson().extractingPath("$.imageUrl")
+                .isEqualTo("https://example.com/popcorn.jpg");
     }
 }

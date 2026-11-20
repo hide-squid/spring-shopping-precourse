@@ -35,4 +35,18 @@ class ProductServiceTest {
         assertThat(product.getPrice()).isEqualTo(5_000L);
         assertThat(product.getImageUrl()).isEqualTo("https://example.com/popcorn.jpg");
     }
+
+    @Test
+    @DisplayName("상품 ID로 특정 상품을 조회한다")
+    void findById() {
+        Product product = productRepository.save(
+                new Product("캐러멜 팝콘", 5_000L, "https://example.com/popcorn.jpg"));
+
+        ProductResponse response = productService.findById(product.getId());
+
+        assertThat(response.id()).isEqualTo(product.getId());
+        assertThat(response.name()).isEqualTo("캐러멜 팝콘");
+        assertThat(response.price()).isEqualTo(5_000L);
+        assertThat(response.imageUrl()).isEqualTo("https://example.com/popcorn.jpg");
+    }
 }

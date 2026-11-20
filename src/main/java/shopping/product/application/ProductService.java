@@ -22,4 +22,10 @@ public class ProductService {
         Product savedProduct = productRepository.save(product);
         return ProductResponse.from(savedProduct);
     }
+
+    @Transactional(readOnly = true)
+    public ProductResponse findById(Long productId) {
+        Product product = productRepository.findById(productId).orElseThrow();
+        return ProductResponse.from(product);
+    }
 }

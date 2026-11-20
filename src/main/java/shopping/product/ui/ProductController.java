@@ -2,6 +2,8 @@ package shopping.product.ui;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,5 +26,10 @@ public class ProductController {
     public ResponseEntity<ProductResponse> create(@RequestBody ProductRequest request) {
         ProductResponse response = productService.create(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @GetMapping("/{productId}")
+    public ResponseEntity<ProductResponse> findById(@PathVariable Long productId) {
+        return ResponseEntity.ok(productService.findById(productId));
     }
 }
