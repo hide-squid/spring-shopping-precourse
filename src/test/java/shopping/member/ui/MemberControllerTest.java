@@ -12,6 +12,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.test.web.servlet.assertj.MvcTestResult;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import shopping.member.domain.MemberRepository;
 
 @SpringBootTest
@@ -40,5 +41,22 @@ class MemberControllerTest {
         assertThat(result).hasStatus(HttpStatus.CREATED);
         assertThat(result).bodyJson().extractingPath("$.token").asString().isNotBlank();
         assertThat(memberRepository.count()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("이메일 형식이 올바르지 않으면 400을 응답하고 회원이 저장되지 않는다")
+    void registerWithInvalidEmail() {
+        String body = """
+                {"email": "not-email", "password": "password"}
+                """;
+
+        MvcTestResult result = mockMvc.post().uri("/api/members/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body)
+                .exchange();
+
+        assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
+        assertThat(result).failure().isInstanceOf(MethodArgumentNotValidException.class);
+        assertThat(memberRepository.count()).isZero();
     }
 }

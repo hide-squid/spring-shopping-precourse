@@ -1,5 +1,6 @@
 package shopping.member.ui;
 
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,9 +27,10 @@ public class MemberController {
     /**
      * POST /api/members/register : 회원 가입
      * 가입에 성공하면 201 Created와 함께 인증 토큰을 응답 바디에 담아 준다.
+     * @Valid: MemberRequest에 붙은 검증 규칙(@Email 등)을 서비스 호출 전에 검사한다.
      */
     @PostMapping("/register")
-    public ResponseEntity<TokenResponse> register(@RequestBody MemberRequest request) {
+    public ResponseEntity<TokenResponse> register(@Valid @RequestBody MemberRequest request) {
         TokenResponse response = memberService.register(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }

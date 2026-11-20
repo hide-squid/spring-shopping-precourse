@@ -1,10 +1,23 @@
 package shopping.member.dto;
 
+import jakarta.validation.constraints.Email;
+
 /**
  * 회원 가입 요청 바디.
  * 예: {"email": "user@test.com", "password": "password"}
- * @param email
- * @param password
+ * 컨트롤러에서 @Valid로 검증하며, 규칙에 맞지 않으면 MethodArgumentNotValidException이 발생한다.
+ * @param email    이메일 (형식이 올바르지 않으면 예외)
+ * @param password 비밀번호
  */
-public record MemberRequest(String email, String password) {
+public record MemberRequest(
+        // @Email 기본 규칙은 "user@localhost"처럼 도메인에 점(.)이 없어도 통과시키므로,
+        // regexp로 "아이디@도메인.최상위도메인(2글자 이상)" 형태만 허용하도록 좁힌다.
+        @Email(
+                regexp = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$",
+                message = "이메일 형식이 올바르지 않습니다."
+        )
+        String email,
+
+        String password
+) {
 }
