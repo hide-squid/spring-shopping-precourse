@@ -33,6 +33,14 @@ class JwtTokenProviderTest {
     }
 
     @Test
+    @DisplayName("토큰에서 회원 ID를 꺼낸다")
+    void getMemberId() {
+        String token = jwtTokenProvider.createToken(1L);
+
+        assertThat(jwtTokenProvider.getMemberId(token)).isEqualTo(1L);
+    }
+
+    @Test
     @DisplayName("직접 발급한 토큰은 유효하다")
     void validToken() {
         String token = jwtTokenProvider.createToken(1L);

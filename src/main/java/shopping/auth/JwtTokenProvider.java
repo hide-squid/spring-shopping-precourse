@@ -1,5 +1,6 @@
 package shopping.auth;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -47,13 +48,29 @@ public class JwtTokenProvider {
      */
     public boolean isValidToken(String token) {
         try {
-            // parseSignedClaims는 서명이 다르거나, 만료됐거나, 형식이 잘못되면 예외를 던진다.
-            Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token);
+            parseClaims(token);
             return true;
         } catch (JwtException | IllegalArgumentException e) {
             // JwtException: 서명 불일치, 만료, 형식 오류 등
             // IllegalArgumentException: 토큰이 null이거나 빈 문자열인 경우
             return false;
         }
+    }
+
+    /**
+     * 토큰에서 회원 ID를 꺼낸다.
+     * createToken에서 subject에 넣어 둔 회원 ID(문자열)를 Long으로 바꿔 돌려준다.
+     * (토큰이 없거나 유효하지 않을 때의 예외 처리는 README의 다음 항목에서 추가한다.)
+     */
+    public Long getMemberId(String token) {
+        return Long.valueOf(parseClaims(token).getSubject());
+    }
+
+    // 비밀 키로 서명을 확인하고 토큰에 담긴 내용(Claims)을 꺼낸다.
+    // 서명이 다르거나, 만료됐거나, 형식이 잘못되면 예외를 던진다.
+    private Claims parseClaims(String token) {
+        return Jwts.parser().verifyWith(secretKey).build()
+                .parseSignedClaims(token)
+                .getPayload();
     }
 }
