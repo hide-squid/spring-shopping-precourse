@@ -40,8 +40,7 @@ public class MemberService {
 
     /**
      * 로그인: 요청받은 이메일로 가입한 회원을 찾아, 그 회원의 ID로 인증 토큰을 발급한다.
-     * 가입하지 않은 이메일이면 LoginFailedException을 던진다.
-     * (틀린 비밀번호 처리는 README의 다음 항목에서 추가한다.)
+     * 가입하지 않은 이메일이거나 비밀번호가 틀리면 LoginFailedException을 던진다.
      * @return 발급한 인증 토큰
      */
     @Transactional(readOnly = true)
@@ -49,7 +48,15 @@ public class MemberService {
         // 회원이 없으면(Optional이 비어 있으면) orElseThrow로 예외를 던진다.
         Member member = memberRepository.findByEmail(request.email())
                 .orElseThrow(LoginFailedException::new);
+        validatePassword(member, request.password());
         return new TokenResponse(jwtTokenProvider.createToken(member.getId()));
+    }
+
+    // 입력한 비밀번호가 회원의 비밀번호와 다르면 예외를 던진다.
+    private void validatePassword(Member member, String password) {
+        if (!member.matchesPassword(password)) {
+            throw new LoginFailedException();
+        }
     }
 
     // 이미 같은 이메일로 가입한 회원이 있으면 예외를 던진다.

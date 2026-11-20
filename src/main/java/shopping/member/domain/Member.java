@@ -33,6 +33,14 @@ public class Member {
         this.password = password;
     }
 
+    /**
+     * 입력한 비밀번호가 이 회원의 비밀번호와 같은지 확인한다.
+     * 비밀번호를 밖으로 꺼내 비교하지 않고, 회원 객체가 직접 판단하게 한다.
+     */
+    public boolean matchesPassword(String password) {
+        return this.password.equals(password);
+    }
+
     public Long getId() {
         return id;
     }

@@ -75,4 +75,15 @@ class MemberServiceTest {
                 .isInstanceOf(LoginFailedException.class)
                 .hasMessage("이메일 또는 비밀번호가 일치하지 않습니다.");
     }
+
+    @Test
+    @DisplayName("비밀번호가 일치하지 않으면 예외가 발생한다")
+    void loginWithWrongPassword() {
+        memberService.register(REQUEST);
+        MemberRequest wrongPassword = new MemberRequest("user@test.com", "wrong-password");
+
+        assertThatThrownBy(() -> memberService.login(wrongPassword))
+                .isInstanceOf(LoginFailedException.class)
+                .hasMessage("이메일 또는 비밀번호가 일치하지 않습니다.");
+    }
 }
