@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -50,6 +52,25 @@ class MemberControllerTest {
                 {"email": "not-email", "password": "password"}
                 """;
 
+        MvcTestResult result = mockMvc.post().uri("/api/members/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body)
+                .exchange();
+
+        assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
+        assertThat(result).failure().isInstanceOf(MethodArgumentNotValidException.class);
+        assertThat(memberRepository.count()).isZero();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "{\"email\": \"\", \"password\": \"password\"}",
+            "{\"password\": \"password\"}",
+            "{\"email\": \"user@test.com\", \"password\": \"\"}",
+            "{\"email\": \"user@test.com\"}"
+    })
+    @DisplayName("이메일 또는 비밀번호가 비어 있으면 400을 응답하고 회원이 저장되지 않는다")
+    void registerWithBlankField(String body) {
         MvcTestResult result = mockMvc.post().uri("/api/members/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body)
