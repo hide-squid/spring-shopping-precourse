@@ -10,6 +10,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
+import org.springframework.test.web.servlet.assertj.MvcTestResult;
 import org.springframework.transaction.annotation.Transactional;
 import shopping.member.domain.MemberRepository;
 
@@ -25,16 +26,19 @@ class MemberControllerTest {
     private MemberRepository memberRepository;
 
     @Test
-    @DisplayName("POST /api/members/register 로 회원 가입하면 201을 응답하고 회원이 저장된다")
+    @DisplayName("POST /api/members/register 로 회원 가입하면 201과 토큰을 응답하고 회원이 저장된다")
     void register() {
         String body = """
                 {"email": "user@test.com", "password": "password"}
                 """;
 
-        assertThat(mockMvc.post().uri("/api/members/register")
+        MvcTestResult result = mockMvc.post().uri("/api/members/register")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(body))
-                .hasStatus(HttpStatus.CREATED);
+                .content(body)
+                .exchange();
+
+        assertThat(result).hasStatus(HttpStatus.CREATED);
+        assertThat(result).bodyJson().extractingPath("$.token").asString().isNotBlank();
         assertThat(memberRepository.count()).isEqualTo(1);
     }
 }

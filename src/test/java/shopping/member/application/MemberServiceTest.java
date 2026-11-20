@@ -10,10 +10,13 @@ import org.springframework.transaction.annotation.Transactional;
 import shopping.member.domain.Member;
 import shopping.member.domain.MemberRepository;
 import shopping.member.dto.MemberRequest;
+import shopping.member.dto.TokenResponse;
 
 @SpringBootTest
 @Transactional
 class MemberServiceTest {
+
+    private static final MemberRequest REQUEST = new MemberRequest("user@test.com", "password");
 
     @Autowired
     private MemberService memberService;
@@ -24,12 +27,18 @@ class MemberServiceTest {
     @Test
     @DisplayName("이메일과 비밀번호로 회원 가입하면 회원이 저장된다")
     void register() {
-        MemberRequest request = new MemberRequest("user@test.com", "password");
+        memberService.register(REQUEST);
 
-        Long memberId = memberService.register(request);
-
-        Member member = memberRepository.findById(memberId).orElseThrow();
+        Member member = memberRepository.findAll().getFirst();
         assertThat(member.getEmail()).isEqualTo("user@test.com");
         assertThat(member.getPassword()).isEqualTo("password");
+    }
+
+    @Test
+    @DisplayName("회원 가입에 성공하면 인증 토큰이 발급된다")
+    void registerReturnsToken() {
+        TokenResponse response = memberService.register(REQUEST);
+
+        assertThat(response.token()).isNotBlank();
     }
 }

@@ -2,9 +2,11 @@ package shopping.member.application;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import shopping.auth.JwtTokenProvider;
 import shopping.member.domain.Member;
 import shopping.member.domain.MemberRepository;
 import shopping.member.dto.MemberRequest;
+import shopping.member.dto.TokenResponse;
 
 /**
  * 회원 관련 비즈니스 로직을 처리하는 서비스.
@@ -13,19 +15,23 @@ import shopping.member.dto.MemberRequest;
 public class MemberService {
 
     private final MemberRepository memberRepository;
+    private final JwtTokenProvider jwtTokenProvider;
 
-    // 생성자 주입: 스프링이 MemberRepository 구현체를 넣어 준다.
-    public MemberService(MemberRepository memberRepository) {
+    // 생성자 주입: 스프링이 MemberRepository 구현체와 JwtTokenProvider를 넣어 준다.
+    public MemberService(MemberRepository memberRepository, JwtTokenProvider jwtTokenProvider) {
         this.memberRepository = memberRepository;
+        this.jwtTokenProvider = jwtTokenProvider;
     }
 
     /**
-     * 회원 가입: 요청받은 이메일과 비밀번호로 회원을 만들어 저장한다.
-     * @return 저장된 회원의 ID
+     * 회원 가입: 요청받은 이메일과 비밀번호로 회원을 만들어 저장하고,
+     * 저장된 회원의 ID로 인증 토큰을 발급한다.
+     * @return 발급한 인증 토큰
      */
     @Transactional
-    public Long register(MemberRequest request) {
+    public TokenResponse register(MemberRequest request) {
         Member member = new Member(request.email(), request.password());
-        return memberRepository.save(member).getId();
+        Member savedMember = memberRepository.save(member);
+        return new TokenResponse(jwtTokenProvider.createToken(savedMember.getId()));
     }
 }
