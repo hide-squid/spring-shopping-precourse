@@ -9,6 +9,7 @@ import java.util.Date;
 import javax.crypto.SecretKey;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import shopping.auth.exception.InvalidTokenException;
 
 /**
  * JWT 인증 토큰을 만들고 검증한다.
@@ -60,10 +61,17 @@ public class JwtTokenProvider {
     /**
      * 토큰에서 회원 ID를 꺼낸다.
      * createToken에서 subject에 넣어 둔 회원 ID(문자열)를 Long으로 바꿔 돌려준다.
-     * (토큰이 없거나 유효하지 않을 때의 예외 처리는 README의 다음 항목에서 추가한다.)
+     * 토큰이 없거나 유효하지 않으면 InvalidTokenException을 던진다.
      */
     public Long getMemberId(String token) {
-        return Long.valueOf(parseClaims(token).getSubject());
+        try {
+            return Long.valueOf(parseClaims(token).getSubject());
+        } catch (JwtException | IllegalArgumentException e) {
+            // 라이브러리 예외를 그대로 내보내지 않고, 우리가 정의한 예외로 바꿔 던진다.
+            // (subject가 숫자가 아닐 때 나는 NumberFormatException도
+            //  IllegalArgumentException의 하위 타입이라 함께 잡힌다.)
+            throw new InvalidTokenException();
+        }
     }
 
     // 비밀 키로 서명을 확인하고 토큰에 담긴 내용(Claims)을 꺼낸다.

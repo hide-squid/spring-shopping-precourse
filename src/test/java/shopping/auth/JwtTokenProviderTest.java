@@ -1,6 +1,7 @@
 package shopping.auth;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -11,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
+import shopping.auth.exception.InvalidTokenException;
 
 class JwtTokenProviderTest {
 
@@ -74,5 +76,36 @@ class JwtTokenProviderTest {
         String token = expired.createToken(1L);
 
         assertThat(jwtTokenProvider.isValidToken(token)).isFalse();
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {" ", "invalid.token.value"})
+    @DisplayName("토큰이 없거나 형식이 잘못되면 회원 ID를 꺼낼 때 예외가 발생한다")
+    void getMemberIdWithMalformedToken(String token) {
+        assertThatThrownBy(() -> jwtTokenProvider.getMemberId(token))
+                .isInstanceOf(InvalidTokenException.class)
+                .hasMessage("유효하지 않은 인증 토큰입니다.");
+    }
+
+    @Test
+    @DisplayName("다른 비밀 키로 서명한 토큰이면 회원 ID를 꺼낼 때 예외가 발생한다")
+    void getMemberIdWithTokenSignedWithOtherKey() {
+        JwtTokenProvider other =
+                new JwtTokenProvider("other-secret-key-other-secret-key-other", 3_600_000L);
+        String token = other.createToken(1L);
+
+        assertThatThrownBy(() -> jwtTokenProvider.getMemberId(token))
+                .isInstanceOf(InvalidTokenException.class);
+    }
+
+    @Test
+    @DisplayName("만료된 토큰이면 회원 ID를 꺼낼 때 예외가 발생한다")
+    void getMemberIdWithExpiredToken() {
+        JwtTokenProvider expired = new JwtTokenProvider(SECRET_KEY, -1_000L);
+        String token = expired.createToken(1L);
+
+        assertThatThrownBy(() -> jwtTokenProvider.getMemberId(token))
+                .isInstanceOf(InvalidTokenException.class);
     }
 }
