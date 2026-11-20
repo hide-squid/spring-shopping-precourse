@@ -82,7 +82,7 @@ class MemberControllerTest {
     }
 
     @Test
-    @DisplayName("POST /api/members/login 으로 가입한 이메일과 비밀번호를 보내면 200을 응답한다")
+    @DisplayName("POST /api/members/login 으로 가입한 이메일과 비밀번호를 보내면 200과 토큰을 응답한다")
     void login() {
         String body = """
                 {"email": "user@test.com", "password": "password"}
@@ -98,5 +98,6 @@ class MemberControllerTest {
                 .exchange();
 
         assertThat(result).hasStatus(HttpStatus.OK);
+        assertThat(result).bodyJson().extractingPath("$.token").asString().isNotBlank();
     }
 }

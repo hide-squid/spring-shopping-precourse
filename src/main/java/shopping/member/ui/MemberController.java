@@ -37,12 +37,11 @@ public class MemberController {
 
     /**
      * POST /api/members/login : 로그인
-     * 이메일과 비밀번호를 받아 로그인하고 200 OK로 응답한다.
+     * 이메일과 비밀번호를 받아 로그인하고, 200 OK와 함께 인증 토큰을 응답 바디에 담아 준다.
      * @Valid: 회원 가입과 같은 MemberRequest 검증 규칙(빈 값, 이메일 형식)을 적용한다.
      */
     @PostMapping("/login")
-    public ResponseEntity<Void> login(@Valid @RequestBody MemberRequest request) {
-        memberService.login(request);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<TokenResponse> login(@Valid @RequestBody MemberRequest request) {
+        return ResponseEntity.ok(memberService.login(request));
     }
 }

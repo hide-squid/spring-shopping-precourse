@@ -56,11 +56,12 @@ class MemberServiceTest {
     }
 
     @Test
-    @DisplayName("가입한 이메일과 비밀번호로 로그인하면 해당 회원의 ID를 돌려준다")
+    @DisplayName("가입한 이메일과 비밀번호로 로그인하면 인증 토큰이 발급된다")
     void login() {
         memberService.register(REQUEST);
-        Long memberId = memberRepository.findAll().getFirst().getId();
 
-        assertThat(memberService.login(REQUEST)).isEqualTo(memberId);
+        TokenResponse response = memberService.login(REQUEST);
+
+        assertThat(response.token()).isNotBlank();
     }
 }
