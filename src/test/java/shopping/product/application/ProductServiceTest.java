@@ -79,4 +79,19 @@ class ProductServiceTest {
     void findAllWhenEmpty() {
         assertThat(productService.findAll()).isEmpty();
     }
+
+    @Test
+    @DisplayName("기존 상품의 정보를 수정한다")
+    void update() {
+        Product product = productRepository.save(
+                new Product("캐러멜 팝콘", 5_000L, "https://example.com/popcorn.jpg"));
+        ProductRequest request =
+                new ProductRequest("콜라", 2_000L, "https://example.com/cola.jpg");
+
+        ProductResponse response = productService.update(product.getId(), request);
+
+        assertThat(response.name()).isEqualTo("콜라");
+        assertThat(response.price()).isEqualTo(2_000L);
+        assertThat(response.imageUrl()).isEqualTo("https://example.com/cola.jpg");
+    }
 }

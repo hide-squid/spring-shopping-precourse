@@ -27,9 +27,7 @@ public class ProductService {
 
     @Transactional(readOnly = true)
     public ProductResponse findById(Long productId) {
-        Product product = productRepository.findById(productId)
-                .orElseThrow(ProductNotFoundException::new);
-        return ProductResponse.from(product);
+        return ProductResponse.from(findProduct(productId));
     }
 
     @Transactional(readOnly = true)
@@ -37,5 +35,17 @@ public class ProductService {
         return productRepository.findAll().stream()
                 .map(ProductResponse::from)
                 .toList();
+    }
+
+    @Transactional
+    public ProductResponse update(Long productId, ProductRequest request) {
+        Product product = findProduct(productId);
+        product.update(request.name(), request.price(), request.imageUrl());
+        return ProductResponse.from(product);
+    }
+
+    private Product findProduct(Long productId) {
+        return productRepository.findById(productId)
+                .orElseThrow(ProductNotFoundException::new);
     }
 }

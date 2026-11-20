@@ -91,4 +91,26 @@ class ProductControllerTest {
         assertThat(result.getResponse().getContentAsString())
                 .contains("캐러멜 팝콘", "콜라", "https://example.com/popcorn.jpg");
     }
+
+    @Test
+    @DisplayName("PUT /api/products/{productId}로 기존 상품의 정보를 수정한다")
+    void update() {
+        Product product = productRepository.save(
+                new Product("캐러멜 팝콘", 5_000L, "https://example.com/popcorn.jpg"));
+        String body = """
+                {"name": "콜라", "price": 2000,
+                 "imageUrl": "https://example.com/cola.jpg"}
+                """;
+
+        MvcTestResult result = mockMvc.put().uri("/api/products/{productId}", product.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body)
+                .exchange();
+
+        assertThat(result).hasStatusOk();
+        assertThat(result).bodyJson().extractingPath("$.name").isEqualTo("콜라");
+        assertThat(result).bodyJson().extractingPath("$.price").isEqualTo(2_000);
+        assertThat(result).bodyJson().extractingPath("$.imageUrl")
+                .isEqualTo("https://example.com/cola.jpg");
+    }
 }
