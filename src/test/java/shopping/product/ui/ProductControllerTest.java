@@ -131,4 +131,28 @@ class ProductControllerTest {
                 .isInstanceOf(ServletException.class)
                 .hasCauseInstanceOf(ProductNotFoundException.class);
     }
+
+    @Test
+    @DisplayName("DELETE /api/products/{productId}로 특정 상품을 삭제한다")
+    void delete() {
+        Product product = productRepository.save(
+                new Product("캐러멜 팝콘", 5_000L, "https://example.com/popcorn.jpg"));
+
+        MvcTestResult result = mockMvc.delete().uri("/api/products/{productId}", product.getId())
+                .exchange();
+
+        assertThat(result).hasStatus(HttpStatus.NO_CONTENT);
+        assertThat(productRepository.existsById(product.getId())).isFalse();
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 상품을 DELETE /api/products/{productId}로 삭제하면 예외가 발생한다")
+    void deleteUnknownProduct() {
+        MvcTestResult result = mockMvc.delete().uri("/api/products/{productId}", 999L)
+                .exchange();
+
+        assertThat(result).failure()
+                .isInstanceOf(ServletException.class)
+                .hasCauseInstanceOf(ProductNotFoundException.class);
+    }
 }

@@ -44,6 +44,12 @@ public class ProductService {
         return ProductResponse.from(product);
     }
 
+    @Transactional
+    public void delete(Long productId) {
+        Product product = findProduct(productId);
+        productRepository.delete(product);
+    }
+
     private Product findProduct(Long productId) {
         return productRepository.findById(productId)
                 .orElseThrow(ProductNotFoundException::new);

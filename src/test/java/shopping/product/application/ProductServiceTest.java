@@ -105,4 +105,23 @@ class ProductServiceTest {
                 .isInstanceOf(ProductNotFoundException.class)
                 .hasMessage("존재하지 않는 상품입니다.");
     }
+
+    @Test
+    @DisplayName("특정 상품을 삭제한다")
+    void delete() {
+        Product product = productRepository.save(
+                new Product("캐러멜 팝콘", 5_000L, "https://example.com/popcorn.jpg"));
+
+        productService.delete(product.getId());
+
+        assertThat(productRepository.existsById(product.getId())).isFalse();
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 상품을 삭제하면 예외가 발생한다")
+    void deleteUnknownProduct() {
+        assertThatThrownBy(() -> productService.delete(999L))
+                .isInstanceOf(ProductNotFoundException.class)
+                .hasMessage("존재하지 않는 상품입니다.");
+    }
 }
