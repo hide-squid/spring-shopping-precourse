@@ -37,6 +37,17 @@ public class MemberService {
         return new TokenResponse(jwtTokenProvider.createToken(savedMember.getId()));
     }
 
+    /**
+     * 로그인: 요청받은 이메일로 가입한 회원을 찾는다.
+     * (없는 이메일/틀린 비밀번호 처리와 토큰 발급은 README의 다음 항목에서 추가한다.)
+     * @return 로그인한 회원의 ID
+     */
+    @Transactional(readOnly = true)
+    public Long login(MemberRequest request) {
+        Member member = memberRepository.findByEmail(request.email()).orElseThrow();
+        return member.getId();
+    }
+
     // 이미 같은 이메일로 가입한 회원이 있으면 예외를 던진다.
     private void validateDuplicateEmail(String email) {
         if (memberRepository.existsByEmail(email)) {

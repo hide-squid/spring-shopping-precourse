@@ -54,4 +54,13 @@ class MemberServiceTest {
                 .isInstanceOf(DuplicateEmailException.class)
                 .hasMessage("이미 가입된 이메일입니다.");
     }
+
+    @Test
+    @DisplayName("가입한 이메일과 비밀번호로 로그인하면 해당 회원의 ID를 돌려준다")
+    void login() {
+        memberService.register(REQUEST);
+        Long memberId = memberRepository.findAll().getFirst().getId();
+
+        assertThat(memberService.login(REQUEST)).isEqualTo(memberId);
+    }
 }

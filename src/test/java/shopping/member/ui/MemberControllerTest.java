@@ -80,4 +80,23 @@ class MemberControllerTest {
         assertThat(result).failure().isInstanceOf(MethodArgumentNotValidException.class);
         assertThat(memberRepository.count()).isZero();
     }
+
+    @Test
+    @DisplayName("POST /api/members/login 으로 가입한 이메일과 비밀번호를 보내면 200을 응답한다")
+    void login() {
+        String body = """
+                {"email": "user@test.com", "password": "password"}
+                """;
+        mockMvc.post().uri("/api/members/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body)
+                .exchange();
+
+        MvcTestResult result = mockMvc.post().uri("/api/members/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body)
+                .exchange();
+
+        assertThat(result).hasStatus(HttpStatus.OK);
+    }
 }

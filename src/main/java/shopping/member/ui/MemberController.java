@@ -34,4 +34,15 @@ public class MemberController {
         TokenResponse response = memberService.register(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
+
+    /**
+     * POST /api/members/login : 로그인
+     * 이메일과 비밀번호를 받아 로그인하고 200 OK로 응답한다.
+     * @Valid: 회원 가입과 같은 MemberRequest 검증 규칙(빈 값, 이메일 형식)을 적용한다.
+     */
+    @PostMapping("/login")
+    public ResponseEntity<Void> login(@Valid @RequestBody MemberRequest request) {
+        memberService.login(request);
+        return ResponseEntity.ok().build();
+    }
 }
