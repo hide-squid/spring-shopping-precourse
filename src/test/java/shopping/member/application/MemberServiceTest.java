@@ -13,6 +13,7 @@ import shopping.member.domain.MemberRepository;
 import shopping.member.dto.MemberRequest;
 import shopping.member.dto.TokenResponse;
 import shopping.member.exception.DuplicateEmailException;
+import shopping.member.exception.LoginFailedException;
 
 @SpringBootTest
 @Transactional
@@ -63,5 +64,15 @@ class MemberServiceTest {
         TokenResponse response = memberService.login(REQUEST);
 
         assertThat(response.token()).isNotBlank();
+    }
+
+    @Test
+    @DisplayName("가입하지 않은 이메일로 로그인하면 예외가 발생한다")
+    void loginWithUnknownEmail() {
+        MemberRequest unknown = new MemberRequest("unknown@test.com", "password");
+
+        assertThatThrownBy(() -> memberService.login(unknown))
+                .isInstanceOf(LoginFailedException.class)
+                .hasMessage("이메일 또는 비밀번호가 일치하지 않습니다.");
     }
 }

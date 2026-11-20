@@ -8,6 +8,7 @@ import shopping.member.domain.MemberRepository;
 import shopping.member.dto.MemberRequest;
 import shopping.member.dto.TokenResponse;
 import shopping.member.exception.DuplicateEmailException;
+import shopping.member.exception.LoginFailedException;
 
 /**
  * 회원 관련 비즈니스 로직을 처리하는 서비스.
@@ -39,12 +40,15 @@ public class MemberService {
 
     /**
      * 로그인: 요청받은 이메일로 가입한 회원을 찾아, 그 회원의 ID로 인증 토큰을 발급한다.
-     * (없는 이메일/틀린 비밀번호 처리는 README의 다음 항목에서 추가한다.)
+     * 가입하지 않은 이메일이면 LoginFailedException을 던진다.
+     * (틀린 비밀번호 처리는 README의 다음 항목에서 추가한다.)
      * @return 발급한 인증 토큰
      */
     @Transactional(readOnly = true)
     public TokenResponse login(MemberRequest request) {
-        Member member = memberRepository.findByEmail(request.email()).orElseThrow();
+        // 회원이 없으면(Optional이 비어 있으면) orElseThrow로 예외를 던진다.
+        Member member = memberRepository.findByEmail(request.email())
+                .orElseThrow(LoginFailedException::new);
         return new TokenResponse(jwtTokenProvider.createToken(member.getId()));
     }
 
