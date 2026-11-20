@@ -3,6 +3,7 @@ package shopping.product.application;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,5 +59,24 @@ class ProductServiceTest {
         assertThatThrownBy(() -> productService.findById(999L))
                 .isInstanceOf(ProductNotFoundException.class)
                 .hasMessage("존재하지 않는 상품입니다.");
+    }
+
+    @Test
+    @DisplayName("모든 상품 목록을 조회한다")
+    void findAll() {
+        productRepository.saveAll(List.of(
+                new Product("캐러멜 팝콘", 5_000L, "https://example.com/popcorn.jpg"),
+                new Product("콜라", 2_000L, "https://example.com/cola.jpg")));
+
+        List<ProductResponse> responses = productService.findAll();
+
+        assertThat(responses).extracting(ProductResponse::name)
+                .containsExactlyInAnyOrder("캐러멜 팝콘", "콜라");
+    }
+
+    @Test
+    @DisplayName("상품이 없으면 빈 목록을 반환한다")
+    void findAllWhenEmpty() {
+        assertThat(productService.findAll()).isEmpty();
     }
 }

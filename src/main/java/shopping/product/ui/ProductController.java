@@ -1,5 +1,6 @@
 package shopping.product.ui;
 
+import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,5 +32,10 @@ public class ProductController {
     @GetMapping("/{productId}")
     public ResponseEntity<ProductResponse> findById(@PathVariable Long productId) {
         return ResponseEntity.ok(productService.findById(productId));
+    }
+
+    @GetMapping
+    public ResponseEntity<List<ProductResponse>> findAll() {
+        return ResponseEntity.ok(productService.findAll());
     }
 }

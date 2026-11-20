@@ -3,6 +3,7 @@ package shopping.product.ui;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import jakarta.servlet.ServletException;
+import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -75,5 +76,19 @@ class ProductControllerTest {
         assertThat(result).failure()
                 .isInstanceOf(ServletException.class)
                 .hasCauseInstanceOf(ProductNotFoundException.class);
+    }
+
+    @Test
+    @DisplayName("GET /api/products로 모든 상품 목록을 조회한다")
+    void findAll() throws Exception {
+        productRepository.saveAll(List.of(
+                new Product("캐러멜 팝콘", 5_000L, "https://example.com/popcorn.jpg"),
+                new Product("콜라", 2_000L, "https://example.com/cola.jpg")));
+
+        MvcTestResult result = mockMvc.get().uri("/api/products").exchange();
+
+        assertThat(result).hasStatusOk();
+        assertThat(result.getResponse().getContentAsString())
+                .contains("캐러멜 팝콘", "콜라", "https://example.com/popcorn.jpg");
     }
 }

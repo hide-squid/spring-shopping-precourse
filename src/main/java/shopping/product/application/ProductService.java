@@ -1,5 +1,6 @@
 package shopping.product.application;
 
+import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import shopping.product.domain.Product;
@@ -29,5 +30,12 @@ public class ProductService {
         Product product = productRepository.findById(productId)
                 .orElseThrow(ProductNotFoundException::new);
         return ProductResponse.from(product);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ProductResponse> findAll() {
+        return productRepository.findAll().stream()
+                .map(ProductResponse::from)
+                .toList();
     }
 }
