@@ -94,4 +94,15 @@ class ProductServiceTest {
         assertThat(response.price()).isEqualTo(2_000L);
         assertThat(response.imageUrl()).isEqualTo("https://example.com/cola.jpg");
     }
+
+    @Test
+    @DisplayName("존재하지 않는 상품을 수정하면 예외가 발생한다")
+    void updateUnknownProduct() {
+        ProductRequest request =
+                new ProductRequest("콜라", 2_000L, "https://example.com/cola.jpg");
+
+        assertThatThrownBy(() -> productService.update(999L, request))
+                .isInstanceOf(ProductNotFoundException.class)
+                .hasMessage("존재하지 않는 상품입니다.");
+    }
 }

@@ -113,4 +113,22 @@ class ProductControllerTest {
         assertThat(result).bodyJson().extractingPath("$.imageUrl")
                 .isEqualTo("https://example.com/cola.jpg");
     }
+
+    @Test
+    @DisplayName("존재하지 않는 상품을 PUT /api/products/{productId}로 수정하면 예외가 발생한다")
+    void updateUnknownProduct() {
+        String body = """
+                {"name": "콜라", "price": 2000,
+                 "imageUrl": "https://example.com/cola.jpg"}
+                """;
+
+        MvcTestResult result = mockMvc.put().uri("/api/products/{productId}", 999L)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body)
+                .exchange();
+
+        assertThat(result).failure()
+                .isInstanceOf(ServletException.class)
+                .hasCauseInstanceOf(ProductNotFoundException.class);
+    }
 }
