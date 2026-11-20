@@ -1,5 +1,6 @@
 package shopping.auth;
 
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import java.nio.charset.StandardCharsets;
@@ -9,7 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 /**
- * JWT 인증 토큰을 만든다.
+ * JWT 인증 토큰을 만들고 검증한다.
  * 토큰의 subject에 회원 ID를 담아, 이후 요청에서 어떤 회원인지 알아낼 수 있게 한다.
  */
 @Component
@@ -38,5 +39,21 @@ public class JwtTokenProvider {
                 .expiration(new Date(now.getTime() + expireLength))
                 .signWith(secretKey)
                 .compact();
+    }
+
+    /**
+     * 토큰이 유효한지 확인한다.
+     * 우리 비밀 키로 서명한 토큰이고, 만료되지 않았으면 true를 돌려준다.
+     */
+    public boolean isValidToken(String token) {
+        try {
+            // parseSignedClaims는 서명이 다르거나, 만료됐거나, 형식이 잘못되면 예외를 던진다.
+            Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token);
+            return true;
+        } catch (JwtException | IllegalArgumentException e) {
+            // JwtException: 서명 불일치, 만료, 형식 오류 등
+            // IllegalArgumentException: 토큰이 null이거나 빈 문자열인 경우
+            return false;
+        }
     }
 }
