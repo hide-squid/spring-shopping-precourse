@@ -1,6 +1,7 @@
 package shopping.product.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -11,6 +12,7 @@ import shopping.product.domain.Product;
 import shopping.product.domain.ProductRepository;
 import shopping.product.dto.ProductRequest;
 import shopping.product.dto.ProductResponse;
+import shopping.product.exception.ProductNotFoundException;
 
 @SpringBootTest
 @Transactional
@@ -48,5 +50,13 @@ class ProductServiceTest {
         assertThat(response.name()).isEqualTo("캐러멜 팝콘");
         assertThat(response.price()).isEqualTo(5_000L);
         assertThat(response.imageUrl()).isEqualTo("https://example.com/popcorn.jpg");
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 상품을 조회하면 예외가 발생한다")
+    void findByUnknownId() {
+        assertThatThrownBy(() -> productService.findById(999L))
+                .isInstanceOf(ProductNotFoundException.class)
+                .hasMessage("존재하지 않는 상품입니다.");
     }
 }

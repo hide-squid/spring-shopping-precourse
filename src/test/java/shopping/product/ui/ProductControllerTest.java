@@ -2,6 +2,7 @@ package shopping.product.ui;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import jakarta.servlet.ServletException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,7 @@ import org.springframework.test.web.servlet.assertj.MvcTestResult;
 import org.springframework.transaction.annotation.Transactional;
 import shopping.product.domain.Product;
 import shopping.product.domain.ProductRepository;
+import shopping.product.exception.ProductNotFoundException;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -62,5 +64,16 @@ class ProductControllerTest {
         assertThat(result).bodyJson().extractingPath("$.price").isEqualTo(5_000);
         assertThat(result).bodyJson().extractingPath("$.imageUrl")
                 .isEqualTo("https://example.com/popcorn.jpg");
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 상품을 GET /api/products/{productId}로 조회하면 예외가 발생한다")
+    void findByUnknownId() {
+        MvcTestResult result = mockMvc.get().uri("/api/products/{productId}", 999L)
+                .exchange();
+
+        assertThat(result).failure()
+                .isInstanceOf(ServletException.class)
+                .hasCauseInstanceOf(ProductNotFoundException.class);
     }
 }

@@ -6,6 +6,7 @@ import shopping.product.domain.Product;
 import shopping.product.domain.ProductRepository;
 import shopping.product.dto.ProductRequest;
 import shopping.product.dto.ProductResponse;
+import shopping.product.exception.ProductNotFoundException;
 
 @Service
 public class ProductService {
@@ -25,7 +26,8 @@ public class ProductService {
 
     @Transactional(readOnly = true)
     public ProductResponse findById(Long productId) {
-        Product product = productRepository.findById(productId).orElseThrow();
+        Product product = productRepository.findById(productId)
+                .orElseThrow(ProductNotFoundException::new);
         return ProductResponse.from(product);
     }
 }
