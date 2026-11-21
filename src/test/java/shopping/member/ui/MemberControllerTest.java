@@ -14,7 +14,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.test.web.servlet.assertj.MvcTestResult;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import shopping.member.domain.MemberRepository;
 
 @SpringBootTest
@@ -58,7 +57,7 @@ class MemberControllerTest {
                 .exchange();
 
         assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
-        assertThat(result).failure().isInstanceOf(MethodArgumentNotValidException.class);
+        assertThat(result).bodyJson().extractingPath("$.message").asString().isNotBlank();
         assertThat(memberRepository.count()).isZero();
     }
 
@@ -77,7 +76,7 @@ class MemberControllerTest {
                 .exchange();
 
         assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
-        assertThat(result).failure().isInstanceOf(MethodArgumentNotValidException.class);
+        assertThat(result).bodyJson().extractingPath("$.message").asString().isNotBlank();
         assertThat(memberRepository.count()).isZero();
     }
 
@@ -99,5 +98,35 @@ class MemberControllerTest {
 
         assertThat(result).hasStatus(HttpStatus.OK);
         assertThat(result).bodyJson().extractingPath("$.token").asString().isNotBlank();
+    }
+
+    @Test
+    @DisplayName("중복된 이메일로 회원 가입하면 409와 JSON 오류 메시지를 반환한다")
+    void registerWithDuplicateEmail() {
+        String body = """
+                {"email": "user@test.com", "password": "password"}
+                """;
+        mockMvc.post().uri("/api/members/register")
+                .contentType(MediaType.APPLICATION_JSON).content(body).exchange();
+
+        MvcTestResult result = mockMvc.post().uri("/api/members/register")
+                .contentType(MediaType.APPLICATION_JSON).content(body).exchange();
+
+        assertThat(result).hasStatus(HttpStatus.CONFLICT);
+        assertThat(result).bodyJson().extractingPath("$.message").asString().isNotBlank();
+    }
+
+    @Test
+    @DisplayName("잘못된 로그인 정보를 보내면 401과 JSON 오류 메시지를 반환한다")
+    void loginFailed() {
+        String body = """
+                {"email": "unknown@test.com", "password": "password"}
+                """;
+
+        MvcTestResult result = mockMvc.post().uri("/api/members/login")
+                .contentType(MediaType.APPLICATION_JSON).content(body).exchange();
+
+        assertThat(result).hasStatus(HttpStatus.UNAUTHORIZED);
+        assertThat(result).bodyJson().extractingPath("$.message").asString().isNotBlank();
     }
 }

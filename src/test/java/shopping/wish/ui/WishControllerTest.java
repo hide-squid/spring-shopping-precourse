@@ -2,7 +2,6 @@ package shopping.wish.ui;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import jakarta.servlet.ServletException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -17,17 +16,12 @@ import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.test.web.servlet.assertj.MvcTestResult;
 import org.springframework.transaction.annotation.Transactional;
 import shopping.auth.JwtTokenProvider;
-import shopping.auth.exception.InvalidTokenException;
 import shopping.member.domain.Member;
 import shopping.member.domain.MemberRepository;
 import shopping.product.domain.Product;
 import shopping.product.domain.ProductRepository;
-import shopping.product.exception.ProductNotFoundException;
 import shopping.wish.domain.Wish;
 import shopping.wish.domain.WishRepository;
-import shopping.wish.exception.DuplicateWishException;
-import shopping.wish.exception.ForbiddenWishException;
-import shopping.wish.exception.WishNotFoundException;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -83,9 +77,8 @@ class WishControllerTest {
     void addUnknownProduct() {
         MvcTestResult result = addWish("{\"productId\": 999}");
 
-        assertThat(result).failure()
-                .isInstanceOf(ServletException.class)
-                .hasCauseInstanceOf(ProductNotFoundException.class);
+        assertThat(result).hasStatus(HttpStatus.NOT_FOUND);
+        assertThat(result).bodyJson().extractingPath("$.message").asString().isNotBlank();
     }
 
     @Test
@@ -96,9 +89,8 @@ class WishControllerTest {
 
         MvcTestResult result = addWish(body);
 
-        assertThat(result).failure()
-                .isInstanceOf(ServletException.class)
-                .hasCauseInstanceOf(DuplicateWishException.class);
+        assertThat(result).hasStatus(HttpStatus.CONFLICT);
+        assertThat(result).bodyJson().extractingPath("$.message").asString().isNotBlank();
     }
 
     @Test
@@ -136,9 +128,8 @@ class WishControllerTest {
                 .header("Authorization", authorization)
                 .exchange();
 
-        assertThat(result).failure()
-                .isInstanceOf(ServletException.class)
-                .hasCauseInstanceOf(WishNotFoundException.class);
+        assertThat(result).hasStatus(HttpStatus.NOT_FOUND);
+        assertThat(result).bodyJson().extractingPath("$.message").asString().isNotBlank();
     }
 
     @Test
@@ -151,9 +142,8 @@ class WishControllerTest {
                 .header("Authorization", authorization)
                 .exchange();
 
-        assertThat(result).failure()
-                .isInstanceOf(ServletException.class)
-                .hasCauseInstanceOf(ForbiddenWishException.class);
+        assertThat(result).hasStatus(HttpStatus.FORBIDDEN);
+        assertThat(result).bodyJson().extractingPath("$.message").asString().isNotBlank();
     }
 
     @Test
@@ -161,9 +151,8 @@ class WishControllerTest {
     void requestWithoutToken() {
         MvcTestResult result = mockMvc.get().uri("/api/wishes").exchange();
 
-        assertThat(result).failure()
-                .isInstanceOf(ServletException.class)
-                .hasCauseInstanceOf(InvalidTokenException.class);
+        assertThat(result).hasStatus(HttpStatus.UNAUTHORIZED);
+        assertThat(result).bodyJson().extractingPath("$.message").asString().isNotBlank();
     }
 
     @ParameterizedTest
@@ -174,9 +163,8 @@ class WishControllerTest {
                 .header("Authorization", invalidAuthorization)
                 .exchange();
 
-        assertThat(result).failure()
-                .isInstanceOf(ServletException.class)
-                .hasCauseInstanceOf(InvalidTokenException.class);
+        assertThat(result).hasStatus(HttpStatus.UNAUTHORIZED);
+        assertThat(result).bodyJson().extractingPath("$.message").asString().isNotBlank();
     }
 
     private MvcTestResult addWish(String body) {

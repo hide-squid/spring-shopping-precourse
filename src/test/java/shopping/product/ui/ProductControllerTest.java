@@ -3,7 +3,6 @@ package shopping.product.ui;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
-import jakarta.servlet.ServletException;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -19,8 +18,6 @@ import org.springframework.transaction.annotation.Transactional;
 import shopping.product.domain.Product;
 import shopping.product.domain.ProductRepository;
 import shopping.product.application.ProfanityChecker;
-import shopping.product.exception.ProfanityProductNameException;
-import shopping.product.exception.ProductNotFoundException;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -80,9 +77,8 @@ class ProductControllerTest {
         MvcTestResult result = mockMvc.get().uri("/api/products/{productId}", 999L)
                 .exchange();
 
-        assertThat(result).failure()
-                .isInstanceOf(ServletException.class)
-                .hasCauseInstanceOf(ProductNotFoundException.class);
+        assertThat(result).hasStatus(HttpStatus.NOT_FOUND);
+        assertThat(result).bodyJson().extractingPath("$.message").asString().isNotBlank();
     }
 
     @Test
@@ -134,9 +130,8 @@ class ProductControllerTest {
                 .content(body)
                 .exchange();
 
-        assertThat(result).failure()
-                .isInstanceOf(ServletException.class)
-                .hasCauseInstanceOf(ProductNotFoundException.class);
+        assertThat(result).hasStatus(HttpStatus.NOT_FOUND);
+        assertThat(result).bodyJson().extractingPath("$.message").asString().isNotBlank();
     }
 
     @Test
@@ -158,9 +153,8 @@ class ProductControllerTest {
         MvcTestResult result = mockMvc.delete().uri("/api/products/{productId}", 999L)
                 .exchange();
 
-        assertThat(result).failure()
-                .isInstanceOf(ServletException.class)
-                .hasCauseInstanceOf(ProductNotFoundException.class);
+        assertThat(result).hasStatus(HttpStatus.NOT_FOUND);
+        assertThat(result).bodyJson().extractingPath("$.message").asString().isNotBlank();
     }
 
     @Test
@@ -177,8 +171,23 @@ class ProductControllerTest {
                 .content(body)
                 .exchange();
 
-        assertThat(result).failure()
-                .isInstanceOf(ServletException.class)
-                .hasCauseInstanceOf(ProfanityProductNameException.class);
+        assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
+        assertThat(result).bodyJson().extractingPath("$.message").asString().isNotBlank();
+    }
+
+    @Test
+    @DisplayName("유효하지 않은 상품 요청은 400과 JSON 오류 메시지를 반환한다")
+    void createWithInvalidRequest() {
+        String body = """
+                {"name": "1234567890123456", "price": -1, "imageUrl": ""}
+                """;
+
+        MvcTestResult result = mockMvc.post().uri("/api/products")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body)
+                .exchange();
+
+        assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
+        assertThat(result).bodyJson().extractingPath("$.message").asString().isNotBlank();
     }
 }
