@@ -1,6 +1,7 @@
 package shopping.product.ui;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 
 import jakarta.servlet.ServletException;
 import java.util.List;
@@ -13,9 +14,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.test.web.servlet.assertj.MvcTestResult;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.annotation.Transactional;
 import shopping.product.domain.Product;
 import shopping.product.domain.ProductRepository;
+import shopping.product.application.ProfanityChecker;
+import shopping.product.exception.ProfanityProductNameException;
 import shopping.product.exception.ProductNotFoundException;
 
 @SpringBootTest
@@ -28,6 +32,9 @@ class ProductControllerTest {
 
     @Autowired
     private ProductRepository productRepository;
+
+    @MockitoBean
+    private ProfanityChecker profanityChecker;
 
     @Test
     @DisplayName("POST /api/products로 상품을 생성하면 201과 생성된 상품을 반환한다")
@@ -154,5 +161,24 @@ class ProductControllerTest {
         assertThat(result).failure()
                 .isInstanceOf(ServletException.class)
                 .hasCauseInstanceOf(ProductNotFoundException.class);
+    }
+
+    @Test
+    @DisplayName("비속어가 포함된 이름으로 상품을 생성하면 예외가 발생한다")
+    void createWithProfanity() {
+        String body = """
+                {"name": "badword", "price": 5000,
+                 "imageUrl": "https://example.com/product.jpg"}
+                """;
+        when(profanityChecker.containsProfanity("badword")).thenReturn(true);
+
+        MvcTestResult result = mockMvc.post().uri("/api/products")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body)
+                .exchange();
+
+        assertThat(result).failure()
+                .isInstanceOf(ServletException.class)
+                .hasCauseInstanceOf(ProfanityProductNameException.class);
     }
 }

@@ -2,17 +2,20 @@ package shopping.product.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.when;
 
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.annotation.Transactional;
 import shopping.product.domain.Product;
 import shopping.product.domain.ProductRepository;
 import shopping.product.dto.ProductRequest;
 import shopping.product.dto.ProductResponse;
+import shopping.product.exception.ProfanityProductNameException;
 import shopping.product.exception.ProductNotFoundException;
 
 @SpringBootTest
@@ -24,6 +27,9 @@ class ProductServiceTest {
 
     @Autowired
     private ProductRepository productRepository;
+
+    @MockitoBean
+    private ProfanityChecker profanityChecker;
 
     @Test
     @DisplayName("상품을 생성하면 저장되고 생성된 상품을 반환한다")
@@ -123,5 +129,32 @@ class ProductServiceTest {
         assertThatThrownBy(() -> productService.delete(999L))
                 .isInstanceOf(ProductNotFoundException.class)
                 .hasMessage("존재하지 않는 상품입니다.");
+    }
+
+    @Test
+    @DisplayName("비속어가 포함된 이름으로 상품을 생성하면 예외가 발생한다")
+    void createWithProfanity() {
+        ProductRequest request =
+                new ProductRequest("badword", 5_000L, "https://example.com/product.jpg");
+        when(profanityChecker.containsProfanity("badword")).thenReturn(true);
+
+        assertThatThrownBy(() -> productService.create(request))
+                .isInstanceOf(ProfanityProductNameException.class)
+                .hasMessage("상품 이름에 비속어가 포함되어 있습니다.");
+        assertThat(productRepository.count()).isZero();
+    }
+
+    @Test
+    @DisplayName("비속어가 포함된 이름으로 상품을 수정하면 예외가 발생한다")
+    void updateWithProfanity() {
+        Product product = productRepository.save(
+                new Product("상품", 5_000L, "https://example.com/product.jpg"));
+        ProductRequest request =
+                new ProductRequest("badword", 2_000L, "https://example.com/changed.jpg");
+        when(profanityChecker.containsProfanity("badword")).thenReturn(true);
+
+        assertThatThrownBy(() -> productService.update(product.getId(), request))
+                .isInstanceOf(ProfanityProductNameException.class);
+        assertThat(product.getName()).isEqualTo("상품");
     }
 }
